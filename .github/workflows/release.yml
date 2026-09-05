@@ -18,6 +18,24 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
+
+      # Without this, a missing token surfaces from inside the publish step as
+      # an auth error against the registry, which reads like a registry or
+      # account problem rather than an unset repository secret.
+      - name: Check the npm token is present
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NPM_TOKEN" ]; then
+            echo "::error::NPM_TOKEN is not set on this repository, so nothing can be published."
+            echo "Create a token that can publish without an interactive 2FA code:"
+            echo "  npmjs.com > Access Tokens > Generate New Token"
+            echo "  Classic > Automation, or Granular with bypass 2FA enabled"
+            echo "Then add it under Settings > Secrets and variables > Actions"
+            echo "  Name: NPM_TOKEN"
+            exit 1
+          fi
+
       - run: npm test
       # Provenance needs the id-token permission above and a public repository.
       - run: npm publish --provenance
