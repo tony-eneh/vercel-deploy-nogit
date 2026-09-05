@@ -18,8 +18,7 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
       - run: npm test
-      # Provenance comes from publishConfig.provenance in package.json, and
-      # needs the id-token permission above plus a public repository.
-      - run: npm publish
+      # Provenance needs the id-token permission above and a public repository.
+      - run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

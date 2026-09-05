@@ -37,8 +37,7 @@
   },
   "homepage": "https://github.com/tony-eneh/vercel-deploy-nogit#readme",
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "scripts": {
     "test": "node --test"
