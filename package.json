@@ -1,0 +1,46 @@
+{
+  "name": "vercel-deploy-nogit",
+  "version": "0.1.0",
+  "description": "Run vercel deploy without attaching git metadata, for when Vercel blocks a deployment because it cannot match the commit author to a user with deploy rights.",
+  "keywords": [
+    "vercel",
+    "deploy",
+    "git",
+    "cli",
+    "devops"
+  ],
+  "license": "MIT",
+  "author": "Tony Eneh",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "vercel-deploy-nogit": "bin/cli.mjs"
+  },
+  "main": "./src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tony-eneh/vercel-deploy-nogit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tony-eneh/vercel-deploy-nogit/issues"
+  },
+  "homepage": "https://github.com/tony-eneh/vercel-deploy-nogit#readme",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}
