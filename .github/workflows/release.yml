@@ -43,9 +43,26 @@ jobs:
 
       - run: npm test
 
+      # A version can only be published once, so re-running a release, or
+      # pushing a tag for a version that went out by hand, would otherwise fail
+      # with a conflict. Nothing to do is a success, not an error.
+      - name: Check whether this version is already published
+        id: published
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version > /dev/null 2>&1; then
+            echo "already=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::$NAME@$VERSION is already on the registry, so there is nothing to publish."
+          else
+            echo "already=false" >> "$GITHUB_OUTPUT"
+            echo "Publishing $NAME@$VERSION"
+          fi
+
       # Under trusted publishing, provenance is generated automatically and this
       # flag is redundant. It is kept so that a token based publish, which is the
       # fallback, still produces provenance.
-      - run: npm publish --provenance
+      - if: steps.published.outputs.already == 'false'
+        run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
