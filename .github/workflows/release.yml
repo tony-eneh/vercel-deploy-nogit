@@ -3,10 +3,12 @@ name: release
 on:
   push:
     tags: ["v*"]
-  workflow_dispatch: 
+  workflow_dispatch:
 
 permissions:
   contents: read
+  # Required for trusted publishing, and for provenance when publishing with a
+  # token. This is what lets the runner mint a short lived OIDC token.
   id-token: write
 
 jobs:
@@ -16,28 +18,34 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          # Trusted publishing needs npm 11.5.1 or later, and Node 22 still
+          # ships npm 10. Node 24 ships npm 11.
+          node-version: 24
           registry-url: https://registry.npmjs.org
 
-      # Without this, a missing token surfaces from inside the publish step as
-      # an auth error against the registry, which reads like a registry or
-      # account problem rather than an unset repository secret.
-      - name: Check the npm token is present
+      # A warning rather than a failure, because there are two valid ways to
+      # authenticate here and only one of them uses a secret.
+      - name: Report how this will authenticate
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          if [ -z "$NPM_TOKEN" ]; then
-            echo "::error::NPM_TOKEN is not set on this repository, so nothing can be published."
-            echo "Create a token that can publish without an interactive 2FA code:"
-            echo "  npmjs.com > Access Tokens > Generate New Token"
-            echo "  Classic > Automation, or Granular with bypass 2FA enabled"
-            echo "Then add it under Settings > Secrets and variables > Actions"
-            echo "  Name: NPM_TOKEN"
-            exit 1
+          npm --version
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "NPM_TOKEN is set. npm prefers OIDC when a trusted publisher is configured, and falls back to this token otherwise."
+          else
+            echo "::warning::No NPM_TOKEN, so this relies on trusted publishing."
+            echo "If the publish step fails to authenticate, either:"
+            echo "  configure a trusted publisher for this package on npmjs.com"
+            echo "    (Package > Settings > Trusted Publisher > GitHub Actions,"
+            echo "     repository tony-eneh/vercel-deploy-nogit, workflow release.yml)"
+            echo "  or add an NPM_TOKEN repository secret."
           fi
 
       - run: npm test
-      # Provenance needs the id-token permission above and a public repository.
+
+      # Under trusted publishing, provenance is generated automatically and this
+      # flag is redundant. It is kept so that a token based publish, which is the
+      # fallback, still produces provenance.
       - run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
